@@ -1,67 +1,51 @@
-from flask import Flask, request, jsonify
-import requests
+from flask import Flask, request
 import os
 
 app = Flask(__name__)
-
-# CONFIGURAÇÕES - Depois você troca aqui no GitHub
 VERIFY_TOKEN = "pizzaria123"
-WHATSAPP_TOKEN = os.environ.get("WHATSAPP_TOKEN", "SEU_TOKEN_AQUI")
-PHONE_NUMBER_ID = os.environ.get("PHONE_NUMBER_ID", "SEU_PHONE_NUMBER_ID_AQUI")
 
-# Cardápio
-CARDAPIO = """
-🍕 *PIZZARIA GARAGEM* 🍕
-Seja bem-vindo! Escolha uma opção:
-
-1️⃣ - Ver Cardápio
-2️⃣ - Fazer Pedido
-3️⃣ - Falar com Atendente
-4️⃣ - Endereço e Horário
-"""
-
-MENU_PIZZAS = """
-🍕 *NOSSO CARDÁPIO*
-
-*Tradicionais - R$ 39,90*
+MENU = """
+Pizzaria Garagem - Cardapio:
 - Calabresa
-- Marguerita
 - Frango com Catupiry
-- Portuguesa
-
-*Especiais - R$ 49,90*
-- Quatro Queijos
 - Bacon com Cheddar
-- Camarão
+- Camarao
 - Garagem (Especial da casa)
 
-Digite o nome da pizza que você quer!
-Ex: *Quero uma Calabresa*
+Digite o nome da pizza que voce quer!
+Ex: Quero uma Calabresa
 """
 
 @app.route("/")
-def home():
-    return "Pizzaria Garagem - Robô Online! 🍕"
+def inicio():
+    return "Pizzaria Garagem - Robo Online! 🍕"
 
 @app.route("/webhook", methods=["GET"])
-def verify():
-    mode = request.args.get("hub.mode")
+def verificar():
+    modo = request.args.get("hub.mode")
     token = request.args.get("hub.verify_token")
-    challenge = request.args.get("hub.challenge")
-    if mode == "subscribe" and token == VERIFY_TOKEN:
-        return challenge, 200
-    return "Erro de verificação", 403
+    desafio = request.args.get("hub.challenge")
+    if modo == "subscribe" and token == VERIFY_TOKEN:
+        return desafio, 200
+    return "Erro de verificacao", 403
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    data = request.get_json()
+    dados = request.get_json()
     try:
-        if data.get("object") == "whatsapp_business_account":
-            for entry in data.get("entry", []):
-                for change in entry.get("changes", []):
-                    value = change.get("value", {})
-                    messages = value.get("messages", [])
-                    for msg in messages:
+        if dados.get("object") == "whatsapp_business_account":
+            for entrada in dados.get("entry", []):
+                for alterar in entrada.get("changes", []):
+                    valor = alterar.get("value", {})
+                    mensagens = valor.get("messages", [])
+                    for msg in mensagens:
                         from_number = msg.get("from")
-                        text = msg.get("text", {}).get("body", "").lower()
-                       
+                        texto = msg.get("text", {}).get("body", "")
+                        print(f"Mensagem de {from_number}: {texto}")
+    except Exception as e:
+        print(f"Erro: {e}")
+    return "OK", 200
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
